@@ -25,14 +25,13 @@ Select Add external JARs
 
 REPLACE %DERBY_HOME% with the path to the base of the Derby database
 
-### IntelliJ 2022.1.4+
+### IntelliJ 
 
-1. File -> New project from existing sources -> select CI553-CW. (Click next until complete)
-2. Select JDK 17 ([download](https://jdk.java.net/archive/) if not installed).
-3. Run (both of which will fail) `clients.Setup.main()` and `clients.Main.main()`.
-4. Run -> Edit configurations (alt+shift+f10) and:
-- select Setup, modify options -> modify classpath -> add `\lib\derby.jar` (located in lib/db-derby-10.14.2.0-lib/)
-- select Main, modify options -> modify classpath -> add `\lib\derby.jar` (located in lib/db-derby-10.14.2.0-lib/)
+1. File -> New -> project from version control -> fill the URl with https://github.com/Shine-SJF/CI553-CW-miniStore.git (Click next until complete)
+2. Run (both of which will fail) `clients.Setup.main()` and `clients.Main.main()`.
+3. Run -> Edit configurations, and:
+4. select Setup, modify options -> modify classpath -> + -> include -> `\lib\derby.jar` (located in lib/db-derby-10.14.2.0-lib/)
+5. select Main,  modify options -> modify classpath -> + -> include -> `\lib\derby.jar` (located in lib/db-derby-10.14.2.0-lib/)
 
 ## Run
 
