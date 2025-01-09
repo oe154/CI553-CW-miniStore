@@ -13,84 +13,64 @@ import java.util.Locale;
  * @version 2.2
  *
  */
-public class Basket extends ArrayList<Product> implements Serializable
-{
-  private static final long serialVersionUID = 1;
-  private int    theOrderNum = 0;          // Order number
-  
-  /**
-   * Constructor for a basket which is
-   *  used to represent a customer order/ wish list
-   */
-  public Basket()
-  {
-    theOrderNum  = 0;
-  }
-  
-  /**
-   * Set the customers unique order number
-   * Valid order Numbers 1 .. N
-   * @param anOrderNum A unique order number
-   */
-  public void setOrderNum( int anOrderNum )
-  {
-    theOrderNum = anOrderNum;
-  }
+public class Basket extends ArrayList<Product> implements Serializable {
+    private static final long serialVersionUID = 1;
+    private int theOrderNum = 0; // Order number
 
-  /**
-   * Returns the customers unique order number
-   * @return the customers order number
-   */
-  public int getOrderNum()
-  {
-    return theOrderNum;
-  }
-  
-  /**
-   * Add a product to the Basket.
-   * Product is appended to the end of the existing products
-   * in the basket.
-   * @param pr A product to be added to the basket
-   * @return true if successfully adds the product
-   */
-  // Will be in the Java doc for Basket
-  @Override
-  public boolean add( Product pr )
-  {                              
-    return super.add( pr );     // Call add in ArrayList
-  }
-
-  /**
-   * Returns a description of the products in the basket suitable for printing.
-   * @return a string description of the basket products
-   */
-  public String getDetails()
-  {
-    Locale uk = Locale.UK;
-    StringBuilder sb = new StringBuilder(256);
-    Formatter     fr = new Formatter(sb, uk);
-    String csign = (Currency.getInstance( uk )).getSymbol();
-    double total = 0.00;
-    if ( theOrderNum != 0 )
-      fr.format( "Order number: %03d\n", theOrderNum );
-      
-    if ( this.size() > 0 )
-    {
-      for ( Product pr: this )
-      {
-        int number = pr.getQuantity();
-        fr.format("%-7s",       pr.getProductNum() );
-        fr.format("%-14.14s ",  pr.getDescription() );
-        fr.format("(%3d) ",     number );
-        fr.format("%s%7.2f",    csign, pr.getPrice() * number );
-        fr.format("\n");
-        total += pr.getPrice() * number;
-      }
-      fr.format("----------------------------\n");
-      fr.format("Total                       ");
-      fr.format("%s%7.2f\n",    csign, total );
-      fr.close();
+    public Basket() {
+        theOrderNum = 0;
     }
-    return sb.toString();
-  }
+
+    public void setOrderNum(int anOrderNum) {
+        theOrderNum = anOrderNum;
+    }
+
+    public int getOrderNum() {
+        return theOrderNum;
+    }
+
+    @Override
+    public boolean add(Product pr) {
+        return super.add(pr); // Call add in ArrayList
+    }
+
+    public String getDetails() {
+        Locale uk = Locale.UK;
+        StringBuilder sb = new StringBuilder(256);
+        Formatter fr = new Formatter(sb, uk);
+        String csign = (Currency.getInstance(uk)).getSymbol();
+        double total = 0.00;
+
+        if (theOrderNum != 0)
+            fr.format("Order number: %03d\n", theOrderNum);
+
+        if (this.size() > 0) {
+            for (Product pr : this) {
+                int number = pr.getQuantity();
+                double priceAfterDiscount = pr.getPrice(); // This now considers the discount
+                fr.format("%-7s", pr.getProductNum());
+                fr.format("%-14.14s ", pr.getDescription());
+                fr.format("(%3d) ", number);
+                fr.format("%s%7.2f", csign, priceAfterDiscount * number);
+                fr.format("\n");
+                total += priceAfterDiscount * number;
+            }
+            fr.format("----------------------------\n");
+            fr.format("Total                       ");
+            fr.format("%s%7.2f\n", csign, total);
+            fr.close();
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Apply a discount to all items in the basket.
+     * @param discountPercentage The discount percentage to apply (e.g., 20 for 20% off).
+     */
+    public void applyDiscount(double discountPercentage) {
+        for (Product product : this) {
+            double newPrice = product.getPrice() * (1 - (discountPercentage / 100.0));
+            product.setPrice(newPrice); // Ensure there's a setPrice method in Product class
+        }
+    }
 }

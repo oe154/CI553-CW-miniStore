@@ -92,7 +92,7 @@ public class PackingModel extends Observable
           if ( sb != null )                  //  Order to pack
           {                                  //  T
             theBasket.set(sb);               //   Working on
-            theAction = "Bought Receipt";     //   what to do
+            theAction = "Bought Receipt. Note that this price is the original price and not after added discount.";     //   what to do
           } else {                           //  F
             worker.free();                   //  Free
             theAction = "";                  // 
@@ -122,34 +122,24 @@ public class PackingModel extends Observable
   /**
    * Process a packed Order
    */
-  public void doPacked()
-  {
-    String theAction = "";
-    try
-    {
-      Basket basket =  theBasket.get();       // Basket being packed
-      if ( basket != null )                   // T
-      {
-        theBasket.set( null );                //  packed
-        int no = basket.getOrderNum();        //  Order no
-        theOrder.informOrderPacked( no );     //  Tell system
-        theAction = "";                       //  Inform picker
-        worker.free();                        //  Can pack some more
-      } else {                                // F 
-        theAction = "No order";       //   Not packed order
-      }
-      setChanged(); notifyObservers(theAction);
-    }
-    catch ( OrderException e )                // Error
-    {                                         //  Of course
-      DEBUG.error( "ReceiptModel.doOk()\n%s\n",//  should not
-                            e.getMessage() ); //  happen
-    }
-    setChanged(); notifyObservers(theAction);
-  }
+  public void doPacked() {
+	    String theAction = "";
+	    try {
+	        Basket basket = theBasket.get();       // Get the basket being packed
+	        if (basket != null) {                  // Check if there's a basket
+	            theBasket.set(null);               // Clear the current basket after packing
+	            int no = basket.getOrderNum();     // Get the order number
+	            theOrder.informOrderPacked(no);    // Inform the system the order is packed
+	            theAction = "Order " + no + " packed."; // Action message update
+	            worker.free();                     // Free up worker for next order
+	        } else {                               
+	            theAction = "No order to pack";    // If no basket to pack
+	        }
+	    } catch (OrderException e) {               
+	        DEBUG.error("PackingModel.doPacked()\n%s", e.getMessage()); // Error handling
+	        theAction = "Error packing order: " + e.getMessage();
+	    }
+	    setChanged(); 
+	    notifyObservers(theAction); // Notify observers of change
+	}
 }
-
-
-
-
-

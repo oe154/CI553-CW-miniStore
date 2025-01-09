@@ -1,6 +1,8 @@
 package clients.cashier;
 
 import catalogue.Basket;
+
+import middle.LocalMiddleFactory;
 import middle.MiddleFactory;
 import middle.OrderProcessing;
 import middle.StockReadWriter;
@@ -10,122 +12,166 @@ import java.awt.*;
 import java.util.Observable;
 import java.util.Observer;
 
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
-/**
- * View of the model 
- */
-public class CashierView implements Observer
-{
-  private static final int H = 300;       // Height of window pixels
-  private static final int W = 400;       // Width  of window pixels
-  
-  private static final String CHECK  = "Check";
-  private static final String BUY    = "Buy";
-  private static final String BOUGHT = "Bought/Pay";
+public class CashierView extends JPanel implements Observer {
+    private static final int H = 300;       // Height of window pixels
+    private static final int W = 400;       // Width of window pixels
 
-  private final JLabel      pageTitle  = new JLabel();
-  private final JLabel      theAction  = new JLabel();
-  private final JTextField  theInput   = new JTextField();
-  private final JTextArea   theOutput  = new JTextArea();
-  private final JScrollPane theSP      = new JScrollPane();
-  private final JButton     theBtCheck = new JButton( CHECK );
-  private final JButton     theBtBuy   = new JButton( BUY );
-  private final JButton     theBtBought= new JButton( BOUGHT );
+    private static final String CHECK = "Check/Scan";
+    private static final String BUY = "Add";
+    private static final String CLEAR = "Clear";
+    private static final String DISCOUNT = "Discnt%";
+    private static final String BOUGHT = "Bought";
 
-  private StockReadWriter theStock     = null;
-  private OrderProcessing theOrder     = null;
-  private CashierController cont       = null;
-  
-  /**
-   * Construct the view
-   * @param rpc   Window in which to construct
-   * @param mf    Factor to deliver order and stock objects
-   * @param x     x-coordinate of position of window on screen 
-   * @param y     y-coordinate of position of window on screen  
-   */
-          
-  public CashierView(  RootPaneContainer rpc,  MiddleFactory mf, int x, int y  )
-  {
-    try                                           // 
-    {      
-      theStock = mf.makeStockReadWriter();        // Database access
-      theOrder = mf.makeOrderProcessing();        // Process order
-    } catch ( Exception e )
-    {
-      System.out.println("Exception: " + e.getMessage() );
+    private JLabel pageTitle = new JLabel("Thank You for Shopping at MiniStore");
+    private JLabel theAction = new JLabel("Welcome, please check or scan order number then press buy");
+    private JTextField theInput = new JTextField();
+    private JTextArea theOutput = new JTextArea();
+    private JScrollPane theSP = new JScrollPane(theOutput);
+    private JButton theBtCheck = new JButton(CHECK);
+    private JButton theBtBuy = new JButton(BUY);
+    private JButton theBtClear = new JButton(CLEAR);
+    private JButton theBtDiscount = new JButton(DISCOUNT);
+    private JButton theBtBought = new JButton(BOUGHT);
+
+    private Font buttonFont = new Font("Arial", Font.BOLD, 12);
+
+    private StockReadWriter theStock = null;
+    private OrderProcessing theOrder = null;
+    private CashierController cont = null;
+
+    public CashierView(MiddleFactory mf) {
+    	
+        try {
+            theStock = mf.makeStockReadWriter(); // Database access
+            theOrder = mf.makeOrderProcessing(); // Process order
+        } catch (Exception e) {
+            System.out.println("Exception: " + e.getMessage());
+        }
+        setLayout(null);
+        setPreferredSize(new Dimension(400, 300));
+        setBackground(Color.BLACK);
+
+        setupLabelsAndFields();
+        setupButtons();
+
+        setVisible(true);
+        theInput.requestFocus(); // Focus is here
     }
-    Container cp         = rpc.getContentPane();    // Content Pane
-    Container rootWindow = (Container) rpc;         // Root Window
-    cp.setLayout(null);                             // No layout manager
-    rootWindow.setSize( W, H );                     // Size of Window
-    rootWindow.setLocation( x, y );
 
-    Font f = new Font("Monospaced",Font.PLAIN,12);  // Font f is
+    private void setupLabelsAndFields() {
+        pageTitle.setForeground(Color.WHITE);
+        pageTitle.setFont(new Font("Arial", Font.BOLD, 16));
+        pageTitle.setBounds(600, 0, 450, 20);
+        add(pageTitle);
 
-    pageTitle.setBounds( 110, 0 , 270, 20 );       
-    pageTitle.setText( "Thank You for Shopping at MiniStrore" );                        
-    cp.add( pageTitle );  
+        theAction.setFont(new Font("Arial", Font.PLAIN, 14));
+        theAction.setForeground(Color.WHITE);
+        theAction.setBounds(600, 25, 600, 20);
+        add(theAction);
+
+        theInput.setFont(new Font("Arial", Font.PLAIN, 14));
+        theInput.setForeground(Color.WHITE);
+        theInput.setBackground(Color.DARK_GRAY);
+        theInput.setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));
+        theInput.setCaretColor(Color.WHITE);
+        theInput.setBounds(600, 50, 270, 40);
+        add(theInput);
+
+        theSP.setBounds(600, 100, 270, 160);
+        theOutput.setFont(new Font("Monospaced", Font.PLAIN, 12));
+        theOutput.setEditable(false);
+        theOutput.setBackground(Color.DARK_GRAY);
+        theOutput.setForeground(Color.WHITE);
+        theOutput.setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));
+        add(theSP);
+    }
+
+    private void setupButtons() {
+        setupButton(theBtCheck, "Check/Scan", new Rectangle(498, 25, 95, 40));
+        setupButton(theBtBuy, "Add", new Rectangle(506, 70, 80, 40));
+        setupButton(theBtClear, "Clear", new Rectangle(506, 115, 80, 40));
+        setupButton(theBtDiscount, "Discnt%", new Rectangle(506, 205, 80, 40)); // Discount button
+        setupButton(theBtBought, "Bought", new Rectangle(506, 160, 80, 40));
+    }
+
+    private void setupButton(JButton button, String text, Rectangle bounds) {
+        button.setText(text);
+        button.setFont(buttonFont);
+        button.setBounds(bounds);
+        button.setBackground(new Color(70, 70, 70));
+        button.setForeground(Color.WHITE);
+        button.setFocusPainted(false);
+        button.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createRaisedBevelBorder(), 
+            BorderFactory.createEmptyBorder(5, 10, 5, 10)));
+        button.addActionListener(e -> {
+            switch (text) {
+                case "Check/Scan":
+                    cont.doCheck(theInput.getText());
+                    
+                    break;
+                case "Add":
+                    cont.doBuy();
+                    theInput.setText("");
+                    break;
+                case "Clear":
+                    cont.doClear();
+                    theOutput.setText("");
+                    theAction.setText("Welcome, please check or scan order number then press buy");
+                    theInput.setText("");
+                    break;
+                case "Discnt%":
+                    applyDiscount();
+                    break;
+                case "Bought":
+                    cont.doBought();
+                    theInput.setText("");
+                    break;
+            }
+        });
+        add(button);
+    }
     
-    theBtCheck.setBounds( 16, 25+60*0, 80, 40 );    // Check Button
-    theBtCheck.addActionListener(                   // Call back code
-      e -> cont.doCheck( theInput.getText() ) );
-    cp.add( theBtCheck );                           //  Add to canvas
+    private void applyDiscount() {
+        try {
+            String inputText = theInput.getText().trim();
+            if (inputText.matches("\\d+%?")) {  // Matches digits followed optionally by '%'
+                double discountRate = Double.parseDouble(inputText.replace("%", "")) / 100.0;
+                String totalText = theOutput.getText();
+                Matcher m = Pattern.compile("Total\\s*£\\s*(\\d+\\.\\d{2})").matcher(totalText);
+                if (m.find()) {
+                    double total = Double.parseDouble(m.group(1));
+                    double discountedTotal = total * (1 - discountRate);
+                    theOutput.setText(totalText.replaceAll("Total\\s*£\\s*\\d+\\.\\d{2}", "Total £ " + String.format("%.2f", discountedTotal)));
+                }
+            } else {
+                JOptionPane.showMessageDialog(this, "Cannot perform discount: Enter a valid percentage", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "Invalid input for discount", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
 
-    theBtBuy.setBounds( 16, 25+60*1, 80, 40 );      // Buy button 
-    theBtBuy.addActionListener(                     // Call back code
-      e -> cont.doBuy() );
-    cp.add( theBtBuy );                             //  Add to canvas
+    public void setController(CashierController c) {
+        cont = c;
+    }
 
-    theBtBought.setBounds( 16, 25+60*3, 80, 40 );   // Bought Button
-    theBtBought.addActionListener(                  // Call back code
-      e -> cont.doBought() );
-    cp.add( theBtBought );                          //  Add to canvas
+    @Override
+    public void update(Observable o, Object arg) {
+        String message = arg.toString();
+        theAction.setText(message);
 
-    theAction.setBounds( 110, 25 , 270, 20 );       // Message area
-    theAction.setText( "" );                        // Blank
-    cp.add( theAction );                            //  Add to canvas
+        CashierModel model = (CashierModel) o;
+        Basket basket = model.getBasket();
+        if (basket != null) {
+            theOutput.setText(basket.getDetails());
+        } else {
+            theOutput.setText("No items in basket");
+        }
 
-    theInput.setBounds( 110, 50, 270, 40 );         // Input Area
-    theInput.setText("");                           // Blank
-    cp.add( theInput );                             //  Add to canvas
-
-    theSP.setBounds( 110, 100, 270, 160 );          // Scrolling pane
-    theOutput.setText( "" );                        //  Blank
-    theOutput.setFont( f );                         //  Uses font  
-    cp.add( theSP );                                //  Add to canvas
-    theSP.getViewport().add( theOutput );           //  In TextArea
-    rootWindow.setVisible( true );                  // Make visible
-    theInput.requestFocus();                        // Focus is here
-  }
-
-  /**
-   * The controller object, used so that an interaction can be passed to the controller
-   * @param c   The controller
-   */
-
-  public void setController( CashierController c )
-  {
-    cont = c;
-  }
-
-  /**
-   * Update the view
-   * @param modelC   The observed model
-   * @param arg      Specific args 
-   */
-  @Override
-  public void update( Observable modelC, Object arg )
-  {
-    CashierModel model  = (CashierModel) modelC;
-    String      message = (String) arg;
-    theAction.setText( message );
-    Basket basket = model.getBasket();
-    if ( basket == null )
-      theOutput.setText( "Customers order" );
-    else
-      theOutput.setText( basket.getDetails() );
-    
-    theInput.requestFocus();               // Focus is here
-  }
-
+        theInput.requestFocus(); // Focus is here
+    }
 }

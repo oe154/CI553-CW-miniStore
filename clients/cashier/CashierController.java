@@ -19,7 +19,11 @@ public class CashierController
   {
     this.view  = view;
     this.model = model;
+    view.setController(this);
+    
   }
+  
+  
 
   /**
    * Check interaction from view
@@ -37,6 +41,15 @@ public class CashierController
   {
     model.doBuy();
   }
+  
+  public void applyDiscountToBasket(String discountText) {
+	    model.applyDiscount(discountText);  // Correct usage
+	}
+  
+  public void doClear() {
+	    model.clearData(); // Clears the model data
+	   
+	}
   
    /**
    * Bought interaction from view

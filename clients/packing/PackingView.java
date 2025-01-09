@@ -1,6 +1,7 @@
 package clients.packing;
 
 import catalogue.Basket;
+import middle.LocalMiddleFactory;
 import middle.MiddleFactory;
 import middle.OrderProcessing;
 
@@ -9,98 +10,86 @@ import java.awt.*;
 import java.util.Observable;
 import java.util.Observer;
 
-/**
- * Implements the Packing view.
+public class PackingView extends JPanel implements Observer {
+    private static final String PACKED = "Packed";
 
- */
+    private JLabel pageTitle = new JLabel("Packing Bought Order");
+    private JLabel theAction = new JLabel("");
+    private JTextArea theOutput = new JTextArea();
+    private JScrollPane theSP = new JScrollPane(theOutput);
+    private JButton theBtPack = new JButton(PACKED);
 
-public class PackingView implements Observer
-{
-  private static final String PACKED = "Packed";
+    private OrderProcessing theOrder = null;
+    private PackingController cont = null;
 
-  private static final int H = 300;       // Height of window pixels
-  private static final int W = 400;       // Width  of window pixels
+    public PackingView(MiddleFactory mf) {
+    	
+        try {
+            theOrder = mf.makeOrderProcessing();  // Process order
+        } catch (Exception e) {
+            System.out.println("Exception: " + e.getMessage());
+        }
 
-  private final JLabel      pageTitle  = new JLabel();
-  private final JLabel      theAction  = new JLabel();
-  private final JTextArea   theOutput  = new JTextArea();
-  private final JScrollPane theSP      = new JScrollPane();
-  private final JButton     theBtPack= new JButton( PACKED );
- 
-  private OrderProcessing theOrder     = null;
-  
-  private PackingController cont= null;
+        setLayout(null);
+        setPreferredSize(new Dimension(400, 300));
+        setBackground(Color.BLACK);
 
-  /**
-   * Construct the view
-   * @param rpc   Window in which to construct
-   * @param mf    Factor to deliver order and stock objects
-   * @param x     x-cordinate of position of window on screen 
-   * @param y     y-cordinate of position of window on screen  
-   */
-  public PackingView(  RootPaneContainer rpc, MiddleFactory mf, int x, int y )
-  {
-    try                                           // 
-    {      
-      theOrder = mf.makeOrderProcessing();        // Process order
-    } catch ( Exception e )
-    {
-      System.out.println("Exception: " + e.getMessage() );
+        Font titleFont = new Font("Arial", Font.BOLD, 16);
+        Font buttonFont = new Font("Arial", Font.BOLD, 12);
+
+        pageTitle.setFont(titleFont);
+        pageTitle.setForeground(Color.WHITE);
+        pageTitle.setBounds(600, 0, 270, 20);
+        add(pageTitle);
+
+        theAction.setFont(new Font("Arial", Font.PLAIN, 14));
+        theAction.setForeground(Color.WHITE);
+        theAction.setBounds(600, 25, 600, 20);
+        add(theAction);
+
+        setUpButton(theBtPack, "Packed", new Rectangle(506, 25, 80, 40), buttonFont);
+
+        theSP.setBounds(600, 55, 270, 205);
+        theOutput.setFont(new Font("Monospaced", Font.PLAIN, 12));
+        theOutput.setEditable(false);
+        theOutput.setBackground(Color.DARK_GRAY);
+        theOutput.setForeground(Color.WHITE);
+        theOutput.setBorder(BorderFactory.createLineBorder(Color.BLACK, 1));
+        add(theSP);
+
+        setVisible(true);  // Make visible
     }
-    Container cp         = rpc.getContentPane();    // Content Pane
-    Container rootWindow = (Container) rpc;         // Root Window
-    cp.setLayout(null);                             // No layout manager
-    rootWindow.setSize( W, H );                     // Size of Window
-    rootWindow.setLocation( x, y );
-    
-    Font f = new Font("Monospaced",Font.PLAIN,12);  // Font f is
-    
-    pageTitle.setBounds( 110, 0 , 270, 20 );       
-    pageTitle.setText( "Packing Bought Order" );                        
-    cp.add( pageTitle );
 
-    theBtPack.setBounds( 16, 25+60*0, 80, 40 );   // Check Button
-    theBtPack.addActionListener(                   // Call back code
-      e -> cont.doPacked() );
-    cp.add( theBtPack );                          //  Add to canvas
-
-    theAction.setBounds( 110, 25 , 270, 20 );       // Message area
-    theAction.setText( "" );                        // Blank
-    cp.add( theAction );                            //  Add to canvas
-
-    theSP.setBounds( 110, 55, 270, 205 );           // Scrolling pane
-    theOutput.setText( "" );                        //  Blank
-    theOutput.setFont( f );                         //  Uses font  
-    cp.add( theSP );                                //  Add to canvas
-    theSP.getViewport().add( theOutput );           //  In TextArea
-    rootWindow.setVisible( true );                  // Make visible
-  }
-  
-  public void setController( PackingController c )
-  {
-    cont = c;
-  }
-
-  /**
-   * Update the view
-   * @param modelC   The observed model
-   * @param arg      Specific args 
-   */
-  @Override
-  public void update( Observable modelC, Object arg )
-  {
-	  PackingModel model  = (PackingModel) modelC;
-    String        message = (String) arg;
-    theAction.setText( message );
-    
-    Basket basket =  model.getBasket();
-    if ( basket != null )
-    {
-      theOutput.setText( basket.getDetails() );
-    } else {
-      theOutput.setText("");
+    private void setUpButton(JButton button, String text, Rectangle bounds, Font font) {
+        button.setText(text);
+        button.setFont(font);
+        button.setBounds(bounds);
+        button.setBackground(new Color(70, 70, 70));
+        button.setForeground(Color.WHITE);
+        button.setFocusPainted(false);
+        button.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createRaisedBevelBorder(),
+            BorderFactory.createEmptyBorder(5, 10, 5, 10)));
+        button.addActionListener(e -> cont.doPacked());
+        add(button);
     }
-  }
 
+    public void setController(PackingController c) {
+        cont = c;
+    }
+
+    @Override
+    public void update(Observable modelC, Object arg) {
+        String message = (String) arg;
+        theAction.setText(message);
+
+        PackingModel model = (PackingModel) modelC;
+        Basket basket = model.getBasket();
+        if (basket != null) {
+            theOutput.setText(basket.getDetails());
+        } else {
+            theOutput.setText("");
+        }
+    }
 }
 

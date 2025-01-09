@@ -30,13 +30,15 @@ public class BackDoorClient
   
   private static void displayGUI(MiddleFactory mf)
   {     
-    JFrame  window = new JFrame();
-     
-    window.setTitle( "BackDoor Client (MVC RMI)");
-    window.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
+	  JFrame window = new JFrame("BackDoor Client (MVC RMI)");
+	    window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	    window.setSize(400, 300);  // Assuming standard size for consistency
+
+	    JPanel mainPanel = new JPanel(); // Main panel that may contain more components
+	    window.add(mainPanel);  // Add the panel to the frame
     
     BackDoorModel      model = new BackDoorModel(mf);
-    BackDoorView       view  = new BackDoorView( window, mf, 0, 0 );
+    BackDoorView       view  = new BackDoorView(mf );
     BackDoorController cont  = new BackDoorController( model, view );
     view.setController( cont );
 
